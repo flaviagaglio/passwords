@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>passwords · Flavia Gaglio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0b0c10;
+            font-family: 'Courier New', Courier, monospace;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background-image: radial-gradient(#1f1f2e 1px, transparent 1px);
+            background-size: 30px 30px;
+            animation: scan 10s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { background-position: 0 0; }
+            100% { background-position: 30px 30px; }
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(10, 8, 20, 0.85);
+            backdrop-filter: blur(5px);
+            border: 3px solid #00ffff;
+            box-shadow: 0 0 20px #00ffff, inset 0 0 10px #00ffff33;
+            border-radius: 0px;
+            padding: 2rem;
+            color: #bbff00;
+            text-shadow: 0 0 5px #bbff00, 0 0 10px #00ffff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,255,255,0.03) 0px, rgba(0,0,0,0.3) 2px, transparent 4px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: 5px;
+            margin-bottom: 0.5rem;
+            color: #00ffff;
+            text-shadow: 3px 3px 0 #ff00c1, -3px -3px 0 #00ffff;
+            animation: glitch 1.5s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: skew(0deg, 0deg); opacity: 1; }
+            95% { transform: skew(2deg, 1deg); opacity: 0.8; }
+            96% { transform: skew(-2deg, -1deg); opacity: 0.9; }
+            97% { transform: skew(0deg, 0deg); opacity: 1; }
+        }
+
+        .byline {
+            text-align: center;
+            font-size: 1.3rem;
+            color: #ff00c1;
+            margin-bottom: 2rem;
+            font-style: italic;
+            text-shadow: 0 0 5px #ff00c1;
+            border-bottom: 2px dashed #00ffff;
+            padding-bottom: 0.5rem;
+            display: inline-block;
+            width: auto;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .glass-panel {
+            background: rgba(0, 255, 255, 0.05);
+            border: 2px solid #00ffff;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            box-shadow: inset 0 0 15px #00ffff33, 0 5px 0 #00ffff;
+        }
+
+        .password-display {
+            background: #000000;
+            border: 3px solid #bbff00;
+            padding: 1.5rem;
+            font-size: 2rem;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            text-align: center;
+            color: #bbff00;
+            text-shadow: 0 0 10px #bbff00;
+            margin-bottom: 1rem;
+            position: relative;
+            box-shadow: 0 0 20px #bbff00;
+        }
+
+        .password-display.glitch {
+            animation: textGlitch 0.3s infinite;
+        }
+
+        @keyframes textGlitch {
+            0% { transform: translate(0); filter: hue-rotate(0deg); }
+            20% { transform: translate(-3px, 1px); filter: hue-rotate(90deg); }
+            40% { transform: translate(3px, -1px); filter: hue-rotate(180deg); }
+            60% { transform: translate(-2px, 2px); filter: hue-rotate(270deg); }
+            80% { transform: translate(2px, -2px); filter: hue-rotate(360deg); }
+            100% { transform: translate(0); }
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2rem;
+            color: #bbff00;
+        }
+
+        input[type=range] {
+            width: 100%;
+            height: 20px;
+            background: #000;
+            border: 2px solid #00ffff;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 25px;
+            height: 35px;
+            background: #ff00c1;
+            border: 2px solid #00ffff;
+            box-shadow: 0 0 15px #ff00c1;
+            cursor: pointer;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 1.2rem;
+        }
+
+        .checkbox-item input[type=checkbox] {
+            width: 20px;
+            height: 20px;
+            accent-color: #ff00c1;
+        }
+
+        .strength-meter {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .strength-bar {
+            flex: 1;
+            height: 20px;
+            background: #111;
+            border: 2px solid #00ffff;
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            background: #ff00c1;
+            box-shadow: 0 0 10px #ff00c1;
+            transition: width 0.2s;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .cyber-button {
+            background: transparent;
+            color: #00ffff;
+            border: 3px solid #00ffff;
+            padding: 1rem 2rem;
+            font-size: 1.3rem;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            position: relative;
+            transition: 0.1s;
+            box-shadow: 0 5px 0 #008b8b, 0 0 15px #00ffff;
+            flex: 1 1 auto;
+            min-width: 200px;
+        }
+
+        .cyber-button:hover {
+            background: #00ffff33;
+            color: #ff00c1;
+            border-color: #ff00c1;
+            box-shadow: 0 5px 0 #ff00c1, 0 0 25px #ff00c1;
+            transform: translateY(-2px);
+        }
+
+        .cyber-button:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #ff00c1;
+        }
+
+        .pixel-corner {
+            position: relative;
+        }
+
+        .pixel-corner::before,
+        .pixel-corner::after {
+            content: "";
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border: 2px solid #bbff00;
+        }
+
+        .footer {
+            margin-top: 2rem;
+            text-align: center;
+            color: #00ffff;
+            font-size: 0.9rem;
+            border-top: 2px dashed #bbff00;
+            padding-top: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2rem; }
+            .password-display { font-size: 1.2rem; }
+            .checkbox-group { grid-template-columns: 1fr; }
+            .cyber-button { min-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PASSWORDS</h1>
+        <div class="byline">by Flavia Gaglio</div>
+
+        <div class="glass-panel">
+            <div class="password-display" id="passwordDisplay">CLICK GENERATE</div>
+
+            <div class="controls">
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>LUNGHEZZA</span>
+                        <span id="lengthValue">16</span>
+                    </div>
+                    <input type="range" id="lengthSlider" min="8" max="64" value="16">
+                </div>
+
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="useUpper" checked> MAIUSCOLE
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="useLower" checked> MINUSCOLE
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="useNumbers" checked> NUMERI
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="useSymbols" checked> SIMBOLI
+                    </label>
+                </div>
+
+                <div class="strength-meter">
+                    <span>FORZA</span>
+                    <div class="strength-bar">
+                        <div class="strength-fill" id="strengthFill" style="width: 80%;"></div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="cyber-button" id="generateBtn">⚡ GENERA ⚡</button>
+                    <button class="cyber-button" id="copyBtn">📋 COPIA</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // Elementi DOM
+            const passwordDisplay = document.getElementById('passwordDisplay');
+            const lengthSlider = document.getElementById('lengthSlider');
+            const lengthValue = document.getElementById('lengthValue');
+            const useUpper = document.getElementById('useUpper');
+            const useLower = document.getElementById('useLower');
+            const useNumbers = document.getElementById('useNumbers');
+            const useSymbols = document.getElementById('useSymbols');
+            const generateBtn = document.getElementById('generateBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const strengthFill = document.getElementById('strengthFill');
+
+            // Set di caratteri
+            const UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const LOWER = 'abcdefghijklmnopqrstuvwxyz';
+            const NUMBERS = '0123456789';
+            const SYMBOLS = '!@#$%^&*()_+[]{}|;:,.<>?';
+
+            // Aggiorna valore slider
+            lengthSlider.addEventListener('input', () => {
+                lengthValue.textContent = lengthSlider.value;
+                updateStrength();
+            });
+
+            // Calcola forza password in base a lunghezza e varietà
+            function calculateStrength(length, charSets) {
+                let variety = 0;
+                if (charSets.upper) variety++;
+                if (charSets.lower) variety++;
+                if (charSets.numbers) variety++;
+                if (charSets.symbols) variety++;
+                
+                let score = 0;
+                // Base: lunghezza (max 40 punti per lunghezza 64)
+                score += Math.min(40, length * 0.6);
+                // Varietà: fino a 40 punti
+                score += variety * 10;
+                // Bonus se tutti e 4 i set: +20
+                if (variety === 4) score += 20;
+                
+                return Math.min(100, score);
+            }
+
+            // Aggiorna barra della forza
+            function updateStrength() {
+                const length = parseInt(lengthSlider.value);
+                const charSets = {
+                    upper: useUpper.checked,
+                    lower: useLower.checked,
+                    numbers: useNumbers.checked,
+                    symbols: useSymbols.checked
+                };
+                const strength = calculateStrength(length, charSets);
+                strengthFill.style.width = strength + '%';
+                // Cambia colore in base alla forza
+                if (strength < 40) strengthFill.style.background = '#ff4444';
+                else if (strength < 70) strengthFill.style.background = '#ffaa00';
+                else strengthFill.style.background = '#00ff88';
+            }
+
+            // Genera password
+            function generatePassword() {
+                let chars = '';
+                if (useUpper.checked) chars += UPPER;
+                if (useLower.checked) chars += LOWER;
+                if (useNumbers.checked) chars += NUMBERS;
+                if (useSymbols.checked) chars += SYMBOLS;
+
+                if (chars === '') {
+                    alert('Seleziona almeno un tipo di carattere!');
+                    return '';
+                }
+
+                const length = parseInt(lengthSlider.value);
+                let password = '';
+                for (let i = 0; i < length; i++) {
+                    const randomIndex = Math.floor(Math.random() * chars.length);
+                    password += chars[randomIndex];
+                }
+                return password;
+            }
+
+            // Mostra password con effetto glitch
+            function displayWithGlitch(pwd) {
+                passwordDisplay.textContent = pwd;
+                passwordDisplay.classList.add('glitch');
+                setTimeout(() => {
+                    passwordDisplay.classList.remove('glitch');
+                }, 300);
+            }
+
+            // Evento genera
+            generateBtn.addEventListener('click', () => {
+                const pwd = generatePassword();
+                if (pwd) displayWithGlitch(pwd);
+                updateStrength();
+            });
+
+            // Evento copia
+            copyBtn.addEventListener('click', () => {
+                const pwd = passwordDisplay.textContent;
+                if (pwd && pwd !== 'CLICK GENERATE') {
+                    navigator.clipboard.writeText(pwd).then(() => {
+                        // feedback visivo
+                        passwordDisplay.style.background = '#00ff0033';
+                        setTimeout(() => {
+                            passwordDisplay.style.background = '';
+                        }, 200);
+                    }).catch(err => {
+                        alert('Errore nella copia');
+                    });
+                }
+            });
+
+            // Inizializza prima password
+            (function init() {
+                const pwd = generatePassword();
+                if (pwd) passwordDisplay.textContent = pwd;
+                updateStrength();
+            })();
+
+            // Aggiorna forza al cambio delle checkbox
+            [useUpper, useLower, useNumbers, useSymbols].forEach(cb => {
+                cb.addEventListener('change', updateStrength);
+            });
+        })();
+    </script>
+</body>
+</html>
