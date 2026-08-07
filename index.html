@@ -307,8 +307,9 @@
                 <div class="strength-meter">
                     <span>FORZA</span>
                     <div class="strength-bar">
-                        <div class="strength-fill" id="strengthFill" style="width: 80%;"></div>
+                        <div class="strength-fill" id="strengthFill" style="width: 0%;"></div>
                     </div>
+                    <span id="entropyValue">0 bit</span>
                 </div>
 
                 <div class="button-group">
@@ -336,6 +337,7 @@
             const generateBtn = document.getElementById('generateBtn');
             const copyBtn = document.getElementById('copyBtn');
             const strengthFill = document.getElementById('strengthFill');
+            const entropyValue = document.getElementById('entropyValue');
 
             // Set di caratteri
             const UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -343,29 +345,43 @@
             const NUMBERS = '0123456789';
             const SYMBOLS = '!@#$%^&*()_+[]{}|;:,.<>?';
 
+            const REFERENCE_BITS = 128;
+
+            function secureRandomInt(maxExclusive) {
+                if (!window.crypto || !window.crypto.getRandomValues) {
+                    throw new Error('Web Crypto API non disponibile');
+                }
+                const range = maxExclusive;
+                const maxUint32 = 0x100000000;
+                const limit = maxUint32 - (maxUint32 % range);
+                const buf = new Uint32Array(1);
+                let value;
+                do {
+                    window.crypto.getRandomValues(buf);
+                    value = buf[0];
+                } while (value >= limit);
+                return value % range;
+            }
+
             // Aggiorna valore slider
             lengthSlider.addEventListener('input', () => {
                 lengthValue.textContent = lengthSlider.value;
                 updateStrength();
             });
 
-            // Calcola forza password in base a lunghezza e varietà
-            function calculateStrength(length, charSets) {
-                let variety = 0;
-                if (charSets.upper) variety++;
-                if (charSets.lower) variety++;
-                if (charSets.numbers) variety++;
-                if (charSets.symbols) variety++;
-                
-                let score = 0;
-                // Base: lunghezza (max 40 punti per lunghezza 64)
-                score += Math.min(40, length * 0.6);
-                // Varietà: fino a 40 punti
-                score += variety * 10;
-                // Bonus se tutti e 4 i set: +20
-                if (variety === 4) score += 20;
-                
-                return Math.min(100, score);
+            function getPoolSize(charSets) {
+                let size = 0;
+                if (charSets.upper) size += UPPER.length;
+                if (charSets.lower) size += LOWER.length;
+                if (charSets.numbers) size += NUMBERS.length;
+                if (charSets.symbols) size += SYMBOLS.length;
+                return size;
+            }
+
+            // Entropia = lunghezza * log2(dimensione alfabeto)
+            function calculateEntropyBits(length, poolSize) {
+                if (poolSize <= 1) return 0;
+                return length * Math.log2(poolSize);
             }
 
             // Aggiorna barra della forza
@@ -377,11 +393,13 @@
                     numbers: useNumbers.checked,
                     symbols: useSymbols.checked
                 };
-                const strength = calculateStrength(length, charSets);
-                strengthFill.style.width = strength + '%';
-                // Cambia colore in base alla forza
-                if (strength < 40) strengthFill.style.background = '#ff4444';
-                else if (strength < 70) strengthFill.style.background = '#ffaa00';
+                const poolSize = getPoolSize(charSets);
+                const bits = calculateEntropyBits(length, poolSize);
+                const percent = Math.min(100, (bits / REFERENCE_BITS) * 100);
+                strengthFill.style.width = percent + '%';
+                entropyValue.textContent = Math.round(bits) + ' bit';
+                if (percent < 35) strengthFill.style.background = '#ff4444';
+                else if (percent < 70) strengthFill.style.background = '#ffaa00';
                 else strengthFill.style.background = '#00ff88';
             }
 
@@ -401,7 +419,7 @@
                 const length = parseInt(lengthSlider.value);
                 let password = '';
                 for (let i = 0; i < length; i++) {
-                    const randomIndex = Math.floor(Math.random() * chars.length);
+                    const randomIndex = secureRandomInt(chars.length);
                     password += chars[randomIndex];
                 }
                 return password;
