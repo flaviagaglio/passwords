@@ -73,6 +73,17 @@
             margin-top: 0.4rem;
         }
 
+        .byline a {
+            color: inherit;
+            text-decoration: underline;
+            text-decoration-color: currentColor;
+            text-underline-offset: 2px;
+        }
+
+        .byline a:hover {
+            color: var(--te-orange);
+        }
+
         .glass-panel {
             background: var(--te-panel);
             border: 2px solid var(--te-border);
@@ -282,7 +293,7 @@
 <body>
     <div class="container">
         <h1>PASSWORDS</h1>
-        <div class="byline">by Flavia Gaglio</div>
+        <div class="byline">by <a href="https://flaviagaglio.github.io" target="_blank" rel="noopener">Flavia Gaglio</a></div>
 
         <div class="glass-panel">
             <div class="password-display" id="passwordDisplay">CLICK GENERATE</div>
